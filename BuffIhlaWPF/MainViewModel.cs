@@ -33,7 +33,7 @@ namespace BuffIhlaWPF
         {
             this.timer = new Timer(OnTimerElapsed);
             SetupModel();
-            Random rand = new Random(4545454);
+            Random rand = new Random();
             yGenerator = new Random(rand.Next());
             alphaGenerator= new Random(rand.Next());
         }
@@ -67,30 +67,29 @@ namespace BuffIhlaWPF
             this.PlotModel.InvalidatePlot(true);
         }
 
-        int pocExp;
-        int pocPret;
-        double d = 10.0;
-        double l = 9.0;
+        int _expCount;
+        int _intersectCount;
+        double _lineDistance = 10.0;
+        double _needleLenght = 9.0;
 
         private void Update()
 
         {
-            int n = 0;
+            //a - calculated lenght of triangle edge
+            //y - generated distance between one of the lines and end of the needle
+            //alpha - degree of the needle
+            //PI - calculated value of PI 
+            double a, y, alpha, PI;
 
-            double a;
-            double y;
-            double alpha;
-            double PI;
-
-            pocExp++;
-            y = yGenerator.NextDouble() * d;
+            _expCount++;
+            y = yGenerator.NextDouble() * _lineDistance;
             alpha = alphaGenerator.NextDouble() * 180;
-            a = l * Math.Sin(alpha * Math.PI / 180);
-            if (a + y >= d)
+            a = _needleLenght * Math.Sin(alpha * Math.PI / 180);
+            if (a + y >= _lineDistance)
             {
-                pocPret++;
+                _intersectCount++;
             }
-            PI = (2 * l * pocExp) / (d * pocPret);
+            PI = (2 * _needleLenght * _expCount) / (_lineDistance * _intersectCount);
 
             var s = (LineSeries)PlotModel.Series[0];
 
@@ -99,8 +98,6 @@ namespace BuffIhlaWPF
             //    s.Points.RemoveAt(0);
 
             s.Points.Add(new DataPoint(x, PI));
-
-            n += s.Points.Count;
 
             CalculatedPiValue = PI;
             RaisePropertyChanged("CalculatedPiValue");
