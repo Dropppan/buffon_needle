@@ -8,6 +8,7 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using BuffIhlaWPF.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Wpf;
@@ -35,10 +36,7 @@ namespace BuffIhlaWPF
             Random rand = new Random();
             yGenerator = new Random(rand.Next());
             alphaGenerator = new Random(rand.Next());
-
             thread = new Thread(Update);
-            thread.Start();
-            
         }
 
         private void SetupModel()
@@ -74,7 +72,33 @@ namespace BuffIhlaWPF
         // distatce between lines
         double _lineDistance = 10.0;
         double _needleLenght = 9.0;
+        private ICommand _startSimCommand;
 
+        public ICommand StartSimCommand
+        {
+            get
+            {
+                if (_startSimCommand == null)
+                {
+                    _startSimCommand = new RelayCommand(
+                        param => this.StartSimulation(),
+                        param=> this.CanStartSimulation()
+                        );
+                }
+                return _startSimCommand;
+            }
+        }
+
+        private void StartSimulation()
+        {
+            if(!thread.IsAlive)
+            thread.Start();
+        }
+
+        private bool CanStartSimulation()
+        {
+            return true;
+        }
         private void Update()
         {
             //a - calculated lenght of triangle edge
@@ -85,7 +109,8 @@ namespace BuffIhlaWPF
             double a, y, alpha, PI;
 
             var s = (LineSeries)PlotModel.Series[0];
-            Thread.Sleep(2000);
+            
+            //Thread.Sleep(2000);
 
             for (int i = 0; i < 100000000; i++)
             {

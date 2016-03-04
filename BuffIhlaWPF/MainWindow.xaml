@@ -6,16 +6,33 @@
         xmlns:local="clr-namespace:BuffIhlaWPF"
         xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="366.314" Width="537.606">
+        Title="MainWindow" Height="366.314" Width="537.606"
+        WindowState="Maximized">
     <Window.DataContext>
         <local:MainViewModel/>
     </Window.DataContext>
     <Grid >
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <oxy:PlotView Model="{Binding PlotModel}" DockPanel.Dock="Top"/>
-        <Label Grid.Row="1" Content="{Binding CalculatedPiValue}" DockPanel.Dock="Bottom"/>
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <TextBox Grid.Row="0"/>
+            <TextBox Grid.Row="1"/>
+            <TextBox Grid.Row="2"/>
+            <Button Command="{Binding StartSimCommand}" Grid.Row="2" Grid.Column="1">Start</Button>
+        </Grid>
+        <oxy:PlotView Model="{Binding PlotModel}" Grid.Row="1"/>
+        <Label Content="{Binding CalculatedPiValue}" Grid.Row="2" />
     </Grid>
 </Window>
