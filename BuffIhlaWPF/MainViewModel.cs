@@ -8,6 +8,7 @@ using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using BuffIhlaWPF.Annotations;
 using OxyPlot.Axes;
 using OxyPlot.Wpf;
@@ -28,31 +29,30 @@ namespace BuffIhlaWPF
         private int numberOfSeries;
         private Random yGenerator;
         private Random alphaGenerator;
-
+        private Thread thread;
         public MainViewModel()
         {
-            this.timer = new Timer(OnTimerElapsed);
             SetupModel();
             Random rand = new Random();
             yGenerator = new Random(rand.Next());
-            alphaGenerator= new Random(rand.Next());
+            alphaGenerator = new Random(rand.Next());
+            thread = new Thread(Update);
         }
 
         private void SetupModel()
         {
             PlotModel = new PlotModel();
+
             PlotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left });
 
             PlotModel.Series.Add(new LineSeries { LineStyle = LineStyle.Solid });
 
-            this.watch.Start();
-
             this.RaisePropertyChanged("PlotModel");
 
-            this.timer.Change(1000, UpdateInterval);
         }
 
         public int TotalNumberOfPoints { get; set; }
+
         public double CalculatedPiValue { get; private set; }
 
         public PlotModel PlotModel { get; private set; }
@@ -69,39 +69,84 @@ namespace BuffIhlaWPF
 
         int _expCount;
         int _intersectCount;
+        // distatce between lines
         double _lineDistance = 10.0;
         double _needleLenght = 9.0;
+        private ICommand _startSimCommand;
 
+        public ICommand StartSimCommand
+        {
+            get
+            {
+                if (_startSimCommand == null)
+                {
+                    _startSimCommand = new RelayCommand(
+                        param => this.StartSimulation(),
+                        param=> this.CanStartSimulation()
+                        );
+                }
+                return _startSimCommand;
+            }
+        }
+
+        private void StartSimulation()
+        {
+            if(!thread.IsAlive)
+            thread.Start();
+        }
+
+        private bool CanStartSimulation()
+        {
+            return true;
+        }
         private void Update()
-
         {
             //a - calculated lenght of triangle edge
             //y - generated distance between one of the lines and end of the needle
             //alpha - degree of the needle
             //PI - calculated value of PI 
+            
             double a, y, alpha, PI;
 
-            _expCount++;
-            y = yGenerator.NextDouble() * _lineDistance;
-            alpha = alphaGenerator.NextDouble() * 180;
-            a = _needleLenght * Math.Sin(alpha * Math.PI / 180);
-            if (a + y >= _lineDistance)
-            {
-                _intersectCount++;
-            }
-            PI = (2 * _needleLenght * _expCount) / (_lineDistance * _intersectCount);
-
             var s = (LineSeries)PlotModel.Series[0];
+            
+            //Thread.Sleep(2000);
 
-            double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 1 : 0;
-            //if (s.Points.Count >= 200)
-            //    s.Points.RemoveAt(0);
+            for (int i = 0; i < 100000000; i++)
+            {
+                _expCount++;
 
-            s.Points.Add(new DataPoint(x, PI));
+                y = yGenerator.NextDouble() * _lineDistance;
 
-            CalculatedPiValue = PI;
-            RaisePropertyChanged("CalculatedPiValue");
+                alpha = alphaGenerator.NextDouble() * 180;
 
+                a = _needleLenght * Math.Sin(alpha * Math.PI / 180);
+                //if the needle intersect with a line
+                if (a + y >= _lineDistance)
+                {
+                    _intersectCount++;
+                }
+                PI = (2 * _needleLenght * _expCount) / (_lineDistance * _intersectCount);
+
+                if (i % 10000 == 0)
+                {
+                    CalculatedPiValue = PI;
+
+                    lock (this.PlotModel.SyncRoot)
+                    {
+                        double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 10000 : 0;
+                        s.Points.Add(new DataPoint(x, PI));
+                        
+                    }
+                    Thread.Sleep(20);
+                    RaisePropertyChanged("CalculatedPiValue");
+
+                    this.PlotModel.InvalidatePlot(true);
+                }
+
+            }
+
+            Console.Write("thread has stoped");
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
