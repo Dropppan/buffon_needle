@@ -53,6 +53,12 @@ namespace BuffIhlaWPF
 
         public int TotalNumberOfPoints { get; set; }
 
+        public double LineDistance { get; set; } = 10.0;
+
+        public double NeedleLenght { get; set; } = 9.0;
+
+        public int NumberOfReplications { get; set; } = 5000000;
+
         public double CalculatedPiValue { get; private set; }
 
         public PlotModel PlotModel { get; private set; }
@@ -70,8 +76,8 @@ namespace BuffIhlaWPF
         int _expCount;
         int _intersectCount;
         // distatce between lines
-        double _lineDistance = 10.0;
-        double _needleLenght = 9.0;
+
+
         private ICommand _startSimCommand;
 
         public ICommand StartSimCommand
@@ -82,7 +88,7 @@ namespace BuffIhlaWPF
                 {
                     _startSimCommand = new RelayCommand(
                         param => this.StartSimulation(),
-                        param=> this.CanStartSimulation()
+                        param => this.CanStartSimulation()
                         );
                 }
                 return _startSimCommand;
@@ -91,8 +97,8 @@ namespace BuffIhlaWPF
 
         private void StartSimulation()
         {
-            if(!thread.IsAlive)
-            thread.Start();
+            if (!thread.IsAlive)
+                thread.Start();
         }
 
         private bool CanStartSimulation()
@@ -105,45 +111,41 @@ namespace BuffIhlaWPF
             //y - generated distance between one of the lines and end of the needle
             //alpha - degree of the needle
             //PI - calculated value of PI 
-            
+
             double a, y, alpha, PI;
 
             var s = (LineSeries)PlotModel.Series[0];
-            
-            //Thread.Sleep(2000);
 
-            for (int i = 0; i < 100000000; i++)
+            for (int i = 0; i < NumberOfReplications; i++)
             {
                 _expCount++;
 
-                y = yGenerator.NextDouble() * _lineDistance;
+                y = yGenerator.NextDouble() * LineDistance;
 
                 alpha = alphaGenerator.NextDouble() * 180;
 
-                a = _needleLenght * Math.Sin(alpha * Math.PI / 180);
+                a = NeedleLenght * Math.Sin(alpha * Math.PI / 180);
                 //if the needle intersect with a line
-                if (a + y >= _lineDistance)
+                if (a + y >= LineDistance)
                 {
                     _intersectCount++;
                 }
-                PI = (2 * _needleLenght * _expCount) / (_lineDistance * _intersectCount);
+                PI = (2 * NeedleLenght * _expCount) / (LineDistance * _intersectCount);
 
-                if (i % 10000 == 0)
+                if (i % 1000 != 0) continue;
+
+                CalculatedPiValue = PI;
+
+                lock (this.PlotModel.SyncRoot)
                 {
-                    CalculatedPiValue = PI;
+                    double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 1000 : 0;
+                    s.Points.Add(new DataPoint(x, PI));
 
-                    lock (this.PlotModel.SyncRoot)
-                    {
-                        double x = s.Points.Count > 0 ? s.Points[s.Points.Count - 1].X + 10000 : 0;
-                        s.Points.Add(new DataPoint(x, PI));
-                        
-                    }
-                    Thread.Sleep(20);
-                    RaisePropertyChanged("CalculatedPiValue");
-
-                    this.PlotModel.InvalidatePlot(true);
                 }
+                Thread.Sleep(40);
+                RaisePropertyChanged("CalculatedPiValue");
 
+                this.PlotModel.InvalidatePlot(true);
             }
 
             Console.Write("thread has stoped");

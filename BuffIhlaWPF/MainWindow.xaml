@@ -27,9 +27,9 @@
                 <RowDefinition/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <TextBox Grid.Row="0"/>
-            <TextBox Grid.Row="1"/>
-            <TextBox Grid.Row="2" />
+            <TextBox Text="{Binding LineDistance}" Grid.Row="0"/>
+            <TextBox Text="{Binding NeedleLenght}" Grid.Row="1"/>
+            <TextBox Text="{Binding NumberOfReplications}" Grid.Row="2" />
             <Button Command="{Binding StartSimCommand}" Grid.Row="2" Grid.Column="1">Start</Button>
         </Grid>
         <oxy:PlotView Model="{Binding PlotModel}" Grid.Row="1"/>
